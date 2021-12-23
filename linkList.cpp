@@ -65,10 +65,14 @@ private:
 
 public:
     LinkList() {}
+    LinkList(initializer_list<T> _Ilist)
+    {
+        for (int i = 0; i < _Ilist.size(); i++)
+            push_back(_Ilist.begin()[i]);
+    }
     ~LinkList()
     {
-        while (_size != 0)
-            pop_first();
+        clear();
     }
 
     T first()
@@ -350,12 +354,28 @@ public:
 
     void clear()
     {
-        while (_size > 0)
-            pop_first();
+        Node<T> *node = _first;
+        while (node != NULL)
+        {
+            _first = node->next;
+            delete node;
+            node = _first;
+            _size--;
+        }
     }
 
-    LinkList &operator=(initializer_list<T> _Ilist)
+    LinkList<T> &operator=(initializer_list<T> _Ilist)
     {
+        clear();
+        for (int i = 0; i < _Ilist.size(); i++)
+            push_back(_Ilist.begin()[i]);
+        return *this;
+    }
+    LinkList<T> &operator+=(initializer_list<T> _Ilist)
+    {
+        for (int i = 0; i < _Ilist.size(); i++)
+            push_back(_Ilist.begin()[i]);
+        return *this;
     }
 
     void print()
@@ -377,19 +397,12 @@ public:
 
 int main(int argc, char const *argv[])
 {
-    LinkList<int> list;
+    LinkList<int> list = {99, 77, 88};
     // list.setCircular(true);
-
-    list.push_first(5);
-    list.push_first(10);
-    list.push_first(25);
-    list.push_first(8);
-    list.push_first(110);
-    list.push_first(-91);
-    list.push_first(32);
-    list.push_back(36);
     list.print();
-    list[2] = 500;
+    list = {1, 10, 8, 7, 15};
+    list.print();
+    list += {32, 36};
     list.print();
 
     cout << "\nEnd" << endl;
