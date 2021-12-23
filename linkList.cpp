@@ -1,4 +1,5 @@
 #include <iostream>
+#include <exception>
 
 using namespace std;
 
@@ -17,6 +18,7 @@ public:
     void print()
     {
         cout << "Data: " << Data << "  \t";
+        cout << "name: " << this << "  \t";
         cout << "Next: " << next << "        \t";
         cout << "Prev: " << prev << "";
     }
@@ -29,7 +31,37 @@ private:
     int _size = 0;
     Node<T> *_first = NULL;
     Node<T> *_last = NULL;
-    bool _circular = true;
+    bool _circular = false;
+
+    Node<T> *findNodeByIndex(int index)
+    {
+        if (_size == 0)
+            return NULL;
+        if (index <= _size / 2)
+        {
+            int i = 0;
+            Node<T> *node = _first;
+            while (node != NULL)
+            {
+                if (i == index)
+                    return node;
+                node = node->next;
+                i++;
+            }
+        }
+        else
+        {
+            int i = _size - 1;
+            Node<T> *node = _last;
+            while (node != NULL)
+            {
+                if (i == index)
+                    return node;
+                node = node->prev;
+                i--;
+            }
+        }
+    }
 
 public:
     LinkList() {}
@@ -55,24 +87,35 @@ public:
     T at(int index)
     {
         if (_size == 0)
-            return NULL;
+            throw std::logic_error("The list link is empty. But you tried to get some.");
         if (!_circular && (index < 0 || index > _size - 1))
-            return NULL;
+            throw std::out_of_range("The index in the operator[] must be between 0 and (size-1).");
         if (_circular)
             index = index % _size;
-        int i = 0;
-        Node<T> *node = _first;
-        while (node != NULL)
-        {
-            if (i == index)
-                return node->Data;
-            node = node->next;
-            i++;
-        }
+        Node<T> *node = findNodeByIndex(index);
+        return node->Data;
     }
-    T operator[](int index)
+    T &operator[](int index)
     {
-        return at(index);
+        if (_size == 0)
+            throw std::logic_error("The list link is empty. But you tried to get some.");
+        if (!_circular && (index < 0 || index > _size - 1))
+            throw std::out_of_range("The index in the operator[] must be between 0 and (size-1).");
+        if (_circular)
+            index = index % _size;
+        Node<T> *node = findNodeByIndex(index);
+        return (node->Data);
+    }
+    bool Set(int index, T element)
+    {
+        if (_size == 0)
+            return false;
+        if (!_circular && (index < 0 || index > _size - 1))
+            return false;
+        if (_circular)
+            index = index % _size;
+        Node<T> *node = findNodeByIndex(index);
+        node.Data = element;
     }
 
     void push_first(T element)
@@ -114,17 +157,12 @@ public:
             Node<T> *temp = new Node<T>(element);
             _first = temp;
             _last = temp;
+            _size++;
         }
         else if (index == 0)
-        {
-            Push_first(element);
-            return;
-        }
+            push_first(element);
         else if (index == _size)
-        {
-            Push_back(element);
-            return;
-        }
+            push_back(element);
         else if (index > 0 && index < _size)
         {
             Node<T> *temp = new Node<T>(element);
@@ -134,17 +172,19 @@ public:
             {
                 if (i == index)
                 {
-                    temp->prev = node->prev->next;
+                    temp->prev = node->prev;
                     node->prev->next = temp;
                     node->prev = temp;
                     temp->next = node;
+                    _size++;
                     break;
                 }
                 node = node->next;
                 i++;
             }
         }
-        _size++;
+        else if (_circular)
+            push_index(index % _size, element);
     }
 
     T pop_first()
@@ -222,9 +262,8 @@ public:
             _size--;
             return data;
         }
-        else
-        {
-        }
+        else if (_circular)
+            return pop_index(index % _size);
         return NULL;
     }
 
@@ -253,6 +292,44 @@ public:
         _first = temp;
     }
 
+    bool swap(int oneIndex, int twoIndex)
+    {
+        if (_size == 0)
+            return false;
+        if (!_circular && (oneIndex < 0 || oneIndex > _size - 1) && (twoIndex < 0 || twoIndex > _size - 1))
+            return false;
+        if (_circular)
+        {
+            oneIndex = oneIndex % _size;
+            twoIndex = twoIndex % _size;
+        }
+        Node<T> *nodeOne = findNodeByIndex(oneIndex);
+        Node<T> *nodeTwo = findNodeByIndex(twoIndex);
+        if (nodeOne->next != NULL)
+            nodeOne->next->prev = nodeTwo;
+        if (nodeOne->prev != NULL)
+            nodeOne->prev->next = nodeTwo;
+        if (nodeTwo->next != NULL)
+            nodeTwo->next->prev = nodeOne;
+        if (nodeTwo->prev != NULL)
+            nodeTwo->prev->next = nodeOne;
+        Node<T> *temp1 = nodeTwo->next;
+        Node<T> *temp2 = nodeTwo->prev;
+        nodeTwo->next = nodeOne->next;
+        nodeTwo->prev = nodeOne->prev;
+        nodeOne->next = temp1;
+        nodeOne->prev = temp2;
+        if (oneIndex == 0)
+            _first = nodeTwo;
+        else if (oneIndex == _size - 1)
+            _last = nodeTwo;
+        if (twoIndex == 0)
+            _first = nodeOne;
+        else if (twoIndex == _size - 1)
+            _last = nodeOne;
+        return true;
+    }
+
     int size()
     {
         return _size;
@@ -277,6 +354,10 @@ public:
             pop_first();
     }
 
+    LinkList &operator=(initializer_list<T> _Ilist)
+    {
+    }
+
     void print()
     {
         int i = 0;
@@ -284,7 +365,6 @@ public:
         while (node != NULL)
         {
             cout << "index: " << i << "   ";
-            cout << "name: " << node << "  \t";
             node->print();
             cout << "\n";
             // cout << "--------------------------------" << endl;
@@ -298,19 +378,18 @@ public:
 int main(int argc, char const *argv[])
 {
     LinkList<int> list;
+    // list.setCircular(true);
 
     list.push_first(5);
     list.push_first(10);
-    list.push_first(20);
+    list.push_first(25);
     list.push_first(8);
+    list.push_first(110);
+    list.push_first(-91);
+    list.push_first(32);
+    list.push_back(36);
     list.print();
-    list.rotate_left();
-    list.print();
-    list.rotate_right();
-    list.print();
-    list.rotate_right();
-    list.print();
-    list.rotate_right();
+    list[2] = 500;
     list.print();
 
     cout << "\nEnd" << endl;
