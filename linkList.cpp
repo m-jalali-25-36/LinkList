@@ -4,20 +4,59 @@
 using namespace std;
 
 template <typename T>
+class Data
+{
+private:
+    T data;
+    unsigned int _index = 0;
+
+public:
+    Data()
+    {
+    }
+    Data(T value)
+    {
+        this->data = value;
+    }
+    Data(T value, int index)
+    {
+        this->data = value;
+        this->_index = index;
+    }
+
+    T value()
+    {
+        return data;
+    }
+    void value(T data)
+    {
+        this->data = data;
+    }
+
+    unsigned int index()
+    {
+        return this->_index;
+    }
+};
+
+template <typename T>
 class Node
 {
 public:
-    T Data;
+    T data;
+    unsigned int index = 0;
     Node<T> *next = NULL;
     Node<T> *prev = NULL;
+
     Node() {}
     Node(T data)
     {
-        this->Data = data;
+        this->data = data;
     }
+
     void print()
     {
-        cout << "Data: " << Data << "  \t";
+        cout << "Data: " << data << "  \t";
         cout << "name: " << this << "  \t";
         cout << "Next: " << next << "        \t";
         cout << "Prev: " << prev << "";
@@ -31,6 +70,7 @@ private:
     int _size = 0;
     Node<T> *_first = NULL;
     Node<T> *_last = NULL;
+    Node<T> *_slippery = NULL;
     bool _circular = false;
 
     Node<T> *findNodeByIndex(int index)
@@ -63,6 +103,11 @@ private:
         }
     }
 
+    Data<T> nodeToDataClass(Node<T> *node)
+    {
+        return Data<T>(node->data, node->index);
+    }
+
 public:
     LinkList() {}
     LinkList(initializer_list<T> _Ilist)
@@ -80,13 +125,13 @@ public:
         if (_size == 0)
             return NULL;
         if (_size == 0)
-            return _first->Data;
+            return _first->data;
     }
     T last()
     {
         if (_size == 0)
             return NULL;
-        return _last->Data;
+        return _last->data;
     }
     T at(int index)
     {
@@ -97,7 +142,7 @@ public:
         if (_circular)
             index = index % _size;
         Node<T> *node = findNodeByIndex(index);
-        return node->Data;
+        return node->data;
     }
     T &operator[](int index)
     {
@@ -108,7 +153,7 @@ public:
         if (_circular)
             index = index % _size;
         Node<T> *node = findNodeByIndex(index);
-        return (node->Data);
+        return (node->data);
     }
     bool Set(int index, T element)
     {
@@ -119,7 +164,84 @@ public:
         if (_circular)
             index = index % _size;
         Node<T> *node = findNodeByIndex(index);
-        node.Data = element;
+        node->data = element;
+        return true;
+    }
+
+    Data<T> Slippery()
+    {
+        if (_size == 0)
+            return NULL;
+        if (_slippery == NULL)
+        {
+            _slippery = _first;
+            _slippery->index = 0;
+        }
+        return nodeToDataClass(_slippery);
+    }
+    Data<T> Next()
+    {
+        if (_size == 0)
+            return NULL;
+        if (_slippery == NULL)
+        {
+            _slippery = _first;
+            _slippery->index = 0;
+        }
+        if (_slippery->next != NULL)
+        {
+            _slippery->next->index = _slippery->index + 1;
+            _slippery = _slippery->next;
+        }
+        return nodeToDataClass(_slippery);
+    }
+    Data<T> Prev()
+    {
+        if (_size == 0)
+            return NULL;
+        if (_slippery == NULL)
+        {
+            _slippery = _first;
+            _slippery->index = 0;
+        }
+        if (_slippery->prev != NULL)
+        {
+            _slippery->next->index = _slippery->index - 1;
+            _slippery = _slippery->prev;
+        }
+        return nodeToDataClass(_slippery);
+    }
+    void begin()
+    {
+        if (_size == 0)
+        {
+            _slippery == NULL;
+        }
+        else
+        {
+            _slippery = _first;
+            _slippery->index = 0;
+        }
+    }
+    void end()
+    {
+        if (_size == 0)
+        {
+            _slippery == NULL;
+        }
+        else
+        {
+            _slippery = _last;
+            _slippery->index = _size - 1;
+        }
+    }
+    bool isBegin()
+    {
+        return _slippery == _first;
+    }
+    bool isEnd()
+    {
+        return _slippery == _last;
     }
 
     void push_first(T element)
@@ -198,7 +320,7 @@ public:
         T data;
         if (_size == 1)
         {
-            data = _first->Data;
+            data = _first->data;
             delete _first;
             _first = NULL;
             _last = NULL;
@@ -206,7 +328,7 @@ public:
         else
         {
             Node<T> *temp = _first;
-            data = _first->Data;
+            data = _first->data;
             _first = _first->next;
             _first->prev = NULL;
             delete temp;
@@ -221,7 +343,7 @@ public:
         T data;
         if (_size == 1)
         {
-            data = _first->Data;
+            data = _first->data;
             delete _first;
             _first = NULL;
             _last = NULL;
@@ -229,7 +351,7 @@ public:
         else
         {
             Node<T> *temp = _last;
-            data = _last->Data;
+            data = _last->data;
             _last = _last->prev;
             _last->next = NULL;
             delete temp;
@@ -254,7 +376,7 @@ public:
             {
                 if (i == index)
                 {
-                    data = node->Data;
+                    data = node->data;
                     node->prev->next = node->next;
                     node->next->prev = node->prev;
                     delete node;
@@ -402,8 +524,12 @@ int main(int argc, char const *argv[])
     list.print();
     list = {1, 10, 8, 7, 15};
     list.print();
-    list += {32, 36};
-    list.print();
+    list.begin();
+    while (!list.isEnd())
+    {
+        cout << list.Slippery().value() << endl;
+        list.Next();
+    }
 
     cout << "\nEnd" << endl;
     return 0;
