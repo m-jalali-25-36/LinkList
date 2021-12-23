@@ -66,7 +66,7 @@ public:
         {
             if (i == index)
                 return node->Data;
-            node = node->prev;
+            node = node->next;
             i++;
         }
     }
@@ -85,8 +85,8 @@ public:
         }
         else
         {
-            temp->prev = _first;
-            _first->next = temp;
+            temp->next = _first;
+            _first->prev = temp;
             _first = temp;
         }
         _size++;
@@ -101,8 +101,8 @@ public:
         }
         else
         {
-            temp->next = _last;
-            _last->prev = temp;
+            temp->prev = _last;
+            _last->next = temp;
             _last = temp;
         }
         _size++;
@@ -134,13 +134,13 @@ public:
             {
                 if (i == index)
                 {
-                    temp->next = node->next->prev;
-                    node->next->prev = temp;
-                    node->next = temp;
-                    temp->prev = node;
+                    temp->prev = node->prev->next;
+                    node->prev->next = temp;
+                    node->prev = temp;
+                    temp->next = node;
                     break;
                 }
-                node = node->prev;
+                node = node->next;
                 i++;
             }
         }
@@ -163,8 +163,8 @@ public:
         {
             Node<T> *temp = _first;
             data = _first->Data;
-            _first = _first->prev;
-            _first->next = NULL;
+            _first = _first->next;
+            _first->prev = NULL;
             delete temp;
         }
         _size--;
@@ -186,8 +186,8 @@ public:
         {
             Node<T> *temp = _last;
             data = _last->Data;
-            _last = _last->next;
-            _last->prev = NULL;
+            _last = _last->prev;
+            _last->next = NULL;
             delete temp;
         }
         _size--;
@@ -211,12 +211,12 @@ public:
                 if (i == index)
                 {
                     data = node->Data;
-                    node->next->prev = node->prev;
                     node->prev->next = node->next;
+                    node->next->prev = node->prev;
                     delete node;
                     break;
                 }
-                node = node->prev;
+                node = node->next;
                 i++;
             }
             _size--;
@@ -233,11 +233,11 @@ public:
         if (_size < 2)
             return;
         Node<T> *temp = _first;
-        _first = _first->prev;
-        _first->next = NULL;
-        _last->prev = temp;
-        temp->next = _last;
-        temp->prev = NULL;
+        _first = _first->next;
+        _first->prev = NULL;
+        _last->next = temp;
+        temp->prev = _last;
+        temp->next = NULL;
         _last = temp;
     }
     void rotate_right()
@@ -245,11 +245,11 @@ public:
         if (_size < 2)
             return;
         Node<T> *temp = _last;
-        _last = _last->next;
-        _last->prev = NULL;
-        _first->next = temp;
-        temp->prev = _first;
-        temp->next = NULL;
+        _last = _last->prev;
+        _last->next = NULL;
+        _first->prev = temp;
+        temp->next = _first;
+        temp->prev = NULL;
         _first = temp;
     }
 
@@ -288,7 +288,7 @@ public:
             node->print();
             cout << "\n";
             // cout << "--------------------------------" << endl;
-            node = node->prev;
+            node = node->next;
             i++;
         }
         cout << "## Size: " << _size << endl;
